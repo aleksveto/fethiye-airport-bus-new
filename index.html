@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Фетхие → аэропорт Даламан</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f8;
+text-align:center;
+margin:0;
+padding:20px;
+}
+
+h1{
+margin-bottom:10px;
+}
+
+button{
+padding:12px 20px;
+font-size:16px;
+border:none;
+border-radius:6px;
+background:#1976d2;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#125aa0;
+}
+
+table{
+margin:auto;
+border-collapse:collapse;
+background:white;
+margin-top:20px;
+}
+
+th,td{
+padding:10px 14px;
+border:1px solid #ddd;
+}
+
+th{
+background:#f0f0f0;
+}
+
+.next{
+background:#e8f5e9;
+font-weight:bold;
+}
+
+.telegram{
+margin-top:35px;
+}
+
+.telegram button{
+background:#27a6e5;
+}
+
+.loading{
+margin-top:15px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Автобусы Фетхие → Dalaman Airport</h1>
+
+<button onclick="loadSchedule()">Показать расписание</button>
+
+<div class="loading" id="loading"></div>
+
+<div id="schedule"></div>
+
+<div class="telegram">
+<a href="https://t.me/fethiye_oludeniz" target="_blank">
+<button>Чат Фетхие в Telegram</button>
+</a>
+</div>
+
+<script>
+
+function timeToMinutes(t){
+let p=t.split(":")
+return parseInt(p[0])*60+parseInt(p[1])
+}
+
+async function loadSchedule(){
+
+document.getElementById("loading").innerHTML="Загрузка расписания..."
+
+let proxy="https://api.allorigins.win/raw?url="
+
+let havas_url="https://www.e-yasamrehberi.com/havas/havas_dalaman_havalimani.htm"
+let muttas_url="https://ulasim.muttas.com.tr/hat/48-25-fethiye-otogar-dalaman-havalimani-439"
+
+let havas_html=await fetch(proxy+havas_url).then(r=>r.text())
+let muttas_html=await fetch(proxy+muttas_url).then(r=>r.text())
+
+let parser=new DOMParser()
+
+let havas_doc=parser.parseFromString(havas_html,"text/html")
+let muttas_doc=parser.parseFromString(muttas_html,"text/html")
+
+let buses=[]
+
+/* Havas */
+
+havas_doc.querySelectorAll("table tr").forEach(tr=>{
+
+let td=tr.querySelectorAll("td")
+
+if(td.length>1){
+
+let times=td[1].innerText.split(",")
+
+times.forEach(t=>{
+t=t.trim()
+if(t.includes(":")){
+buses.push({time:t,company:"Havaş"})
+}
+})
+
+}
+
+})
+
+/* Muttas */
+
+muttas_doc.querySelectorAll("table tr").forEach(tr=>{
+
+let td=tr.querySelector("td")
+
+if(td){
+
+let t=td.innerText.trim()
+
+if(t.includes(":")){
+buses.push({time:t,company:"MUTTAŞ"})
+}
+
+}
+
+})
+
+/* удаляем прошедшие */
+
+let now=new Date()
+
+let current=now.getHours()*60+now.getMinutes()
+
+buses=buses.filter(b=>timeToMinutes(b.time)>=current)
+
+/* сортировка */
+
+buses.sort((a,b)=>timeToMinutes(a.time)-timeToMinutes(b.time))
+
+/* таблица */
+
+let html="<table>"
+html+="<tr><th>Время</th><th>Перевозчик</th></tr>"
+
+buses.forEach((b,i)=>{
+
+if(i==0){
+html+="<tr class='next'>"
+}else{
+html+="<tr>"
+}
+
+html+="<td>"+b.time+"</td>"
+html+="<td>"+b.company+"</td>"
+html+="</tr>"
+
+})
+
+html+="</table>"
+
+document.getElementById("loading").innerHTML=""
+document.getElementById("schedule").innerHTML=html
+
+}
+
+</script>
+
+</body>
+</html>
