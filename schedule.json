@@ -288,10 +288,6 @@
     "company": "Muttas"
   },
   {
-    "time": "13:30",
-    "company": "Muttas"
-  },
-  {
     "time": "15:30",
     "company": "Muttas"
   },
@@ -305,6 +301,10 @@
   },
   {
     "time": "18:30",
+    "company": "Muttas"
+  },
+  {
+    "time": "19:00",
     "company": "Muttas"
   },
   {
